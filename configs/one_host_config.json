@@ -1,0 +1,56 @@
+{
+  "strategies": {
+    "fairness_strategy": "strict",
+    "chunk_size": 200
+  },
+  "processes": {
+    "A": {
+      "id": "A",
+      "role": "leader",
+      "team": "green",
+      "host": "127.0.0.1",
+      "port": 60051,
+      "neighbors": ["B", "E"]
+    },
+    "B": {
+      "id": "B",
+      "role": "team_leader",
+      "team": "green",
+      "host": "127.0.0.1",
+      "port": 60052,
+      "neighbors": ["A", "C", "D"]
+    },
+    "C": {
+      "id": "C",
+      "role": "worker",
+      "team": "green",
+      "host": "127.0.0.1",
+      "port": 60053,
+      "neighbors": ["B"]
+    },
+    "D": {
+      "id": "D",
+      "role": "worker",
+      "team": "pink",
+      "host": "127.0.0.1",
+      "port": 60054,
+      "neighbors": ["B", "E"]
+    },
+    "E": {
+      "id": "E",
+      "role": "team_leader",
+      "team": "pink",
+      "host": "127.0.0.1",
+      "port": 60055,
+      "neighbors": ["A", "F", "D"]
+    },
+    "F": {
+      "id": "F",
+      "role": "worker",
+      "team": "pink",
+      "host": "127.0.0.1",
+      "port": 60056,
+      "neighbors": ["E"]
+    }
+  }
+}

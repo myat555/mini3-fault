@@ -1,0 +1,82 @@
+========================================================================================================================
+BENCHMARK
+========================================================================================================================
+Fairness Strategy: weighted
+Requests: 400, Concurrency: 20
+Started: 2025-11-15 18:10:32
+========================================================================================================================
+
+------------------------------------------------------------------------------------------------------------------------
+HOST: 192.168.1.1
+------------------------------------------------------------------------------------------------------------------------
+ID   Role         Team   Status   Active   Queue    Avg(ms)    Files    State          
+------------------------------------------------------------------------------------------------------------------------
+C    worker       green  online   0        0        2.30       48       Ready          
+E    team_leader  pink   online   0        0        19.75      108      Ready          
+F    worker       pink   online   0        0        1.25       156      Ready          
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+RECENT LOGS (192.168.1.1):
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  C: [Orchestrator] C _collect_records called, role=worker, limit=1000
+  C: [Orchestrator] C local query: 1000 records from 107385 total
+  C: [Orchestrator] C query 15ae5489: 1000 records, 2.7ms, filters={param=PM2.5, value=[10.0, 50.0]}
+  E: [Orchestrator] E query 13a282ca: 1000 records, 20.2ms, filters={param=PM2.5, value=[10.0, 50.0]}
+  E: [Orchestrator] E received 500 records from D, remaining=0
+  E: [Orchestrator] E query 9e6a7a47: 1000 records, 21.3ms, filters={param=PM2.5, value=[10.0, 50.0]}
+  F: [Orchestrator] F _collect_records called, role=worker, limit=500
+  F: [Orchestrator] F local query: 500 records from 355551 total
+  F: [Orchestrator] F query 1e975fc3: 500 records, 3.2ms, filters={param=PM2.5, value=[10.0, 50.0]}
+------------------------------------------------------------------------------------------------------------------------
+HOST: 192.168.1.2
+------------------------------------------------------------------------------------------------------------------------
+ID   Role         Team   Status   Active   Queue    Avg(ms)    Files    State          
+------------------------------------------------------------------------------------------------------------------------
+A    leader       green  online   0        0        107.81     12       Ready          
+B    team_leader  green  online   0        0        20.46      36       Ready          
+D    worker       pink   online   0        0        3.35       156      Ready          
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+RECENT LOGS (192.168.1.2):
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  A: [Orchestrator] A coordinated query 35ba7bfe: aggregated 2000 records from team leaders, 96.7ms, filters={pa...
+  A: [Orchestrator] A received 1000 records from E, remaining=0
+  A: [Orchestrator] A coordinated query e9851fac: aggregated 2000 records from team leaders, 110.6ms, filters={p...
+  B: [Orchestrator] B received 1000 records from C, remaining=0
+  B: [Orchestrator] B query 63c6090b: 1000 records, 20.1ms, filters={param=PM2.5, value=[10.0, 50.0]}
+  B: [Orchestrator] B query b6dc2299: 1000 records, 17.6ms, filters={param=PM2.5, value=[10.0, 50.0]}
+  D: [Orchestrator] D local query: 500 records from 353177 total
+  D: [Orchestrator] D query d717ae3f: 500 records, 3.6ms, filters={param=PM2.5, value=[10.0, 50.0]}
+  D: [Orchestrator] D query 7d011cc8: 500 records, 2.5ms, filters={param=PM2.5, value=[10.0, 50.0]}
+
+========================================================================================================================
+BENCHMARK SUMMARY
+========================================================================================================================
+Completed at: 2025-11-15 18:10:32
+Duration: 6.98 seconds
+
+Total Requests: 400
+Successful: 400
+Failed: 0
+Success Rate: 100.00%
+
+Performance Metrics:
+  Average Latency: 148.88 ms
+  Min Latency: 89.00 ms
+  Max Latency: 373.14 ms
+  P95 Latency: 236.75 ms
+  P99 Latency: 312.04 ms
+  Throughput: 57.33 req/sec
+
+Data Metrics:
+  Total Records Returned: 800000
+  Average Records per Query: 2000.00
+
+Final Process Metrics:
+  A (leader/green): Active=0, Queue=0, AvgTime=107.81ms, Files=12
+  B (team_leader/green): Active=0, Queue=0, AvgTime=20.46ms, Files=36
+  C (worker/green): Active=0, Queue=0, AvgTime=2.30ms, Files=48
+  D (worker/pink): Active=0, Queue=0, AvgTime=3.35ms, Files=156
+  E (team_leader/pink): Active=0, Queue=0, AvgTime=19.75ms, Files=108
+  F (worker/pink): Active=0, Queue=0, AvgTime=1.25ms, Files=156
+========================================================================================================================

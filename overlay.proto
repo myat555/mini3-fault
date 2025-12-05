@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+service OverlayNode {
+  rpc Query(QueryRequest) returns (QueryResponse) {}
+  rpc GetChunk(ChunkRequest) returns (ChunkResponse) {}
+  rpc GetMetrics(MetricsRequest) returns (MetricsResponse) {}
+  rpc Shutdown(ShutdownRequest) returns (ShutdownResponse) {}
+}
+
+message QueryRequest {
+  string query_type = 1;  // "filter", "aggregate", "search"
+  string query_params = 2;  // JSON string with query parameters
+  repeated string hops = 3;
+  string client_id = 4;
+}
+
+message QueryResponse {
+  string uid = 1;  // Unique ID for this query
+  int32 total_chunks = 2;  // Total number of chunks available
+  int64 total_records = 3;  // Total records matching query
+  repeated string hops = 4;
+  string status = 5;  // "accepted", "processing", "ready"
+}
+
+message ChunkRequest {
+  string uid = 1;  // Query UID
+  int32 chunk_index = 2;  // Which chunk to retrieve (0-indexed)
+}
+
+message ChunkResponse {
+  string uid = 1;
+  int32 chunk_index = 2;
+  int32 total_chunks = 3;
+  string data = 4;  // JSON string with chunk data
+  bool is_last = 5;
+  string status = 6;  // "success", "not_ready", "error"
+}
+
+message MetricsRequest {}
+
+message MetricsResponse {
+  string process_id = 1;
+  string role = 2;
+  string team = 3;
+  int32 active_requests = 4;
+  int32 max_capacity = 5;
+  bool is_healthy = 6;
+  int32 queue_size = 7;
+  float avg_processing_time_ms = 8;
+  int32 data_files_loaded = 9;
+  string fairness_strategy = 10;     // Current fairness strategy
+  repeated string recent_logs = 11;  // Recent log lines (last N lines)
+}
+
+message ShutdownRequest {
+  bool graceful = 1;
+}
+
+message ShutdownResponse {
+  string status = 1;
+}
