@@ -63,6 +63,10 @@ class HookManager:
             callbacks = [(p, cb) for p, cb in self._hooks.get(event, [])]
             self._hook_stats[event]["triggered"] += len(callbacks)
 
+        # Add logging to show hook execution
+        if callbacks:
+            print(f"[HookManager] Triggering '{event}' hook ({len(callbacks)} callbacks)", flush=True)
+
         futures = []
         for priority, callback in callbacks:
             try:
@@ -172,4 +176,3 @@ class HookEvents:
     DATA_REPLICATED = "data_replicated"
     MIGRATION_STARTED = "migration_started"
     MIGRATION_COMPLETED = "migration_completed"
-

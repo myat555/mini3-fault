@@ -99,6 +99,12 @@ class QueryOrchestrator:
             self._on_neighbor_recovered,
             priority=10
         )
+        
+        # Log initialization
+        current_state = self._state_tracker.get_current_state()
+        registered_events = self._hooks.get_registered_events()
+        print(f"[Orchestrator] {process.id} initialized: StateTracker={current_state.value}, "
+              f"HookManager={len(registered_events)} events registered, HealthChecker=active", flush=True)
 
     def _compute_team_members(self, team: str) -> List[ProcessSpec]:
         """Collect process specs that belong to the same team as this node."""
@@ -212,6 +218,14 @@ class QueryOrchestrator:
                 active_requests=admission["active"],
                 queue_size=len(self._cache),
             )
+            
+            # Get current state after update
+            current_state = self._state_tracker.get_current_state()
+            
+            # Log state tracker activity (every query)
+            print(f"[StateTracker] {self._process.id} state: {current_state.value} "
+                  f"(latency={stats['avg_ms']:.1f}ms, active={admission['active']}, queue={len(self._cache)})", 
+                  flush=True)
             
             # Trigger state_changed hook if state changed
             if state_change:
@@ -572,4 +586,3 @@ class QueryOrchestrator:
         """Shutdown orchestrator and cleanup resources."""
         self._health_checker.stop()
         self._hooks.shutdown(wait=True, timeout=5.0)
-
