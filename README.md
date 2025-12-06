@@ -159,8 +159,10 @@ python -u node.py configs/one_host_config.json F
 
 # Run fault tolerance tests
 ```
-python test_fault_tolerance.py configs/one_host_config.json 127.0.0.1 60051### Two Host
+python test_fault_tolerance.py configs/one_host_config.json 127.0.0.1 60051
 ```
+
+### Two Host
 # Host 1 (192.168.1.2)
 ```
 python -u node.py configs/two_hosts_config.json A
