@@ -56,7 +56,20 @@ class NeighborRegistry:
                 return client
 
             spec = self._config.get(neighbor_id)
-            channel = grpc.insecure_channel(spec.address)
+            # gRPC Keepalive options to ensure connection resilience
+            keepalive_options = [
+                # Send a ping every 10 seconds to keep the connection alive
+                ('grpc.keepalive_time_ms', 10000),
+                # Wait 5 seconds for a ping response before considering the connection down
+                ('grpc.keepalive_timeout_ms', 5000),
+                # Allow pings even if there are no ongoing calls
+                ('grpc.keepalive_permit_without_calls', True),
+                # Minimum time between pings
+                ('grpc.http2.min_time_between_pings_ms', 10000),
+                # Allow unlimited pings without data
+                ('grpc.http2.max_pings_without_data', 0),
+            ]
+            channel = grpc.insecure_channel(spec.address, options=keepalive_options)
             self._channels[neighbor_id] = channel
             client = RemoteNodeClient(spec, channel)
             self._clients[neighbor_id] = client
