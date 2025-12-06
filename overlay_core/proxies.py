@@ -1,4 +1,5 @@
 from typing import Dict
+import threading
 
 import grpc
 
@@ -11,23 +12,22 @@ from .config import OverlayConfig, ProcessSpec
 class RemoteNodeClient:
     """Client for communicating with remote overlay nodes via gRPC."""
 
-    def __init__(self, spec: ProcessSpec):
+    def __init__(self, spec: ProcessSpec, channel: grpc.Channel):
         self.spec = spec
+        self._channel = channel
+        self._stub = overlay_pb2_grpc.OverlayNodeStub(self._channel)
 
     @property
     def address(self) -> str:
         return self.spec.address
 
     def query(self, request: overlay_pb2.QueryRequest) -> overlay_pb2.QueryResponse:
-        with grpc.insecure_channel(self.address) as channel:
-            stub = overlay_pb2_grpc.OverlayNodeStub(channel)
-            return stub.Query(request)
+        # Re-uses the channel and stub
+        return self._stub.Query(request)
 
     def get_chunk(self, uid: str, index: int) -> overlay_pb2.ChunkResponse:
-        with grpc.insecure_channel(self.address) as channel:
-            stub = overlay_pb2_grpc.OverlayNodeStub(channel)
-            chunk_request = overlay_pb2.ChunkRequest(uid=uid, chunk_index=index)
-            return stub.GetChunk(chunk_request)
+        chunk_request = overlay_pb2.ChunkRequest(uid=uid, chunk_index=index)
+        return self._stub.GetChunk(chunk_request)
 
 
 class NeighborRegistry:
@@ -37,12 +37,35 @@ class NeighborRegistry:
         self._config = config
         self._self_id = self_id
         self._clients: Dict[str, RemoteNodeClient] = {}
+        self._channels: Dict[str, grpc.Channel] = {}
+        self._lock = threading.Lock()
 
     def for_neighbor(self, neighbor_id: str) -> RemoteNodeClient:
         if neighbor_id == self._self_id:
             raise ValueError("Cannot create client for self.")
-        if neighbor_id not in self._clients:
-            spec = self._config.get(neighbor_id)
-            self._clients[neighbor_id] = RemoteNodeClient(spec)
-        return self._clients[neighbor_id]
 
+        # First, try to get the client without a lock for performance.
+        client = self._clients.get(neighbor_id)
+        if client is not None:
+            return client
+
+        # If not found, acquire lock and double-check to handle race conditions.
+        with self._lock:
+            client = self._clients.get(neighbor_id)
+            if client is not None:
+                return client
+
+            spec = self._config.get(neighbor_id)
+            channel = grpc.insecure_channel(spec.address)
+            self._channels[neighbor_id] = channel
+            client = RemoteNodeClient(spec, channel)
+            self._clients[neighbor_id] = client
+            return client
+
+    def close_all(self):
+        """Closes all open gRPC channels."""
+        with self._lock:
+            for channel in self._channels.values():
+                channel.close()
+            self._channels.clear()
+            self._clients.clear()
