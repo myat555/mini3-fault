@@ -81,8 +81,4 @@ class NeighborRegistry:
             for channel in self._channels.values():
                 channel.close()
             self._channels.clear()
-<<<<<<< HEAD
             self._clients.clear()
-=======
-            self._clients.clear()
->>>>>>> f6291696b340e6d7ae46c676804286b5c9be5f24
