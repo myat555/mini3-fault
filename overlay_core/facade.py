@@ -585,4 +585,5 @@ class QueryOrchestrator:
     def shutdown(self):
         """Shutdown orchestrator and cleanup resources."""
         self._health_checker.stop()
+        self._neighbor_registry.close_all()
         self._hooks.shutdown(wait=True, timeout=5.0)

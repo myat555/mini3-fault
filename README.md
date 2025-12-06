@@ -1,5 +1,78 @@
 # Distributed Overlay Network System + Fault Tolerance
 
+# Fault Tolerance Features
+
+## New Features
+
+### State Tracking
+- Monitors node health states: `HEALTHY → WARNING → CRITICAL → FAILING`
+- Tracks transitions based on latency, active requests, and queue size
+- Records transition history and probabilities
+
+### Health Checking
+- Continuously monitors neighbor health (every 5 seconds)
+- Detects failures after 2 consecutive check failures
+- Automatically detects node recovery
+- Triggers hooks on failure/recovery events
+
+### Dynamic Routing
+- Automatically routes queries around failed nodes
+- Transparent to query code - no changes needed
+- Automatically includes recovered nodes
+
+### Hooks System (Temporal Decoupling)
+- Asynchronous callbacks for query lifecycle events
+- Events: `query_started`, `query_completed`, `state_changed`, `neighbor_failed`, `neighbor_recovered`
+- Non-blocking execution - queries don't wait for hooks
+
+## Quick Test
+
+### Single Host
+# Start all 6 nodes (separate terminals)
+```
+python -u node.py configs/one_host_config.json A
+python -u node.py configs/one_host_config.json B
+python -u node.py configs/one_host_config.json C
+python -u node.py configs/one_host_config.json D
+python -u node.py configs/one_host_config.json E
+python -u node.py configs/one_host_config.json F
+```
+
+# Run fault tolerance tests
+```
+python test_fault_tolerance.py configs/one_host_config.json 127.0.0.1 60051
+```
+
+### Two Host
+# Host 1 (192.168.1.2)
+```
+python -u node.py configs/two_hosts_config.json A
+python -u node.py configs/two_hosts_config.json B
+python -u node.py configs/two_hosts_config.json D
+```
+# Host 2 (192.168.1.1)
+```
+python -u node.py configs/two_hosts_config.json C
+python -u node.py configs/two_hosts_config.json E
+python -u node.py configs/two_hosts_config.json F
+```
+# Run tests from Host 1
+```
+python test_fault_tolerance.py configs/two_hosts_config.json 192.168.1.2 60051
+```
+## What to Watch
+Node logs will show:
+- `[StateTracker]` - State transitions
+- `[HealthChecker]` - Failure/recovery detection  
+- `[HookManager]` - Hook execution
+- `[Orchestrator]` - Routing around failures
+
+## Test Scenarios
+
+1. **Node Failure**: Stop a node → System routes around it
+2. **Recovery**: Restart node → System uses it again
+3. **Overload**: High load → State transitions triggered
+
 A gRPC-based distributed system implementing multi-process coordination with automatic data partitioning and configurable fairness strategies.
 
 ## Quick Start
@@ -119,75 +192,3 @@ Edit `configs/two_hosts_config.json`:
 - Both hosts must be able to ping each other
 
 
-# Fault Tolerance Features
-
-## New Features
-
-### State Tracking
-- Monitors node health states: `HEALTHY → WARNING → CRITICAL → FAILING`
-- Tracks transitions based on latency, active requests, and queue size
-- Records transition history and probabilities
-
-### Health Checking
-- Continuously monitors neighbor health (every 5 seconds)
-- Detects failures after 2 consecutive check failures
-- Automatically detects node recovery
-- Triggers hooks on failure/recovery events
-
-### Dynamic Routing
-- Automatically routes queries around failed nodes
-- Transparent to query code - no changes needed
-- Automatically includes recovered nodes
-
-### Hooks System (Temporal Decoupling)
-- Asynchronous callbacks for query lifecycle events
-- Events: `query_started`, `query_completed`, `state_changed`, `neighbor_failed`, `neighbor_recovered`
-- Non-blocking execution - queries don't wait for hooks
-
-## Quick Test
-
-### Single Host
-# Start all 6 nodes (separate terminals)
-```
-python -u node.py configs/one_host_config.json A
-python -u node.py configs/one_host_config.json B
-python -u node.py configs/one_host_config.json C
-python -u node.py configs/one_host_config.json D
-python -u node.py configs/one_host_config.json E
-python -u node.py configs/one_host_config.json F
-```
-
-# Run fault tolerance tests
-```
-python test_fault_tolerance.py configs/one_host_config.json 127.0.0.1 60051
-```
-
-### Two Host
-# Host 1 (192.168.1.2)
-```
-python -u node.py configs/two_hosts_config.json A
-python -u node.py configs/two_hosts_config.json B
-python -u node.py configs/two_hosts_config.json D
-```
-# Host 2 (192.168.1.1)
-```
-python -u node.py configs/two_hosts_config.json C
-python -u node.py configs/two_hosts_config.json E
-python -u node.py configs/two_hosts_config.json F
-```
-# Run tests from Host 1
-```
-python test_fault_tolerance.py configs/two_hosts_config.json 192.168.1.2 60051
-```
-## What to Watch
-Node logs will show:
-- `[StateTracker]` - State transitions
-- `[HealthChecker]` - Failure/recovery detection  
-- `[HookManager]` - Hook execution
-- `[Orchestrator]` - Routing around failures
-
-## Test Scenarios
-
-1. **Node Failure**: Stop a node → System routes around it
-2. **Recovery**: Restart node → System uses it again
-3. **Overload**: High load → State transitions triggered
