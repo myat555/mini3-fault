@@ -177,9 +177,9 @@ python -u node.py configs/two_hosts_config.json F
 ```
 # Run tests from Host 1
 ```
-python test_fault_tolerance.py configs/two_hosts_config.json 192.168.1.2 60051## What to Watch
+python test_fault_tolerance.py configs/two_hosts_config.json 192.168.1.2 60051
 ```
-
+## What to Watch
 Node logs will show:
 - `[StateTracker]` - State transitions
 - `[HealthChecker]` - Failure/recovery detection  
