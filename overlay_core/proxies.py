@@ -7,7 +7,7 @@ import overlay_pb2
 import overlay_pb2_grpc
 
 from .config import OverlayConfig, ProcessSpec
-
+from .resilience import retry, CircuitBreaker
 
 class RemoteNodeClient:
     """Client for communicating with remote overlay nodes via gRPC."""
@@ -16,18 +16,39 @@ class RemoteNodeClient:
         self.spec = spec
         self._channel = channel
         self._stub = overlay_pb2_grpc.OverlayNodeStub(self._channel)
+        self._circuit_breaker = CircuitBreaker(failure_threshold=5, recovery_timeout=10.0, exceptions=(grpc.RpcError,))
 
     @property
     def address(self) -> str:
         return self.spec.address
 
+    @retry(max_retries=3, initial_delay=0.2, exceptions=(grpc.RpcError,))
     def query(self, request: overlay_pb2.QueryRequest) -> overlay_pb2.QueryResponse:
-        # Re-uses the channel and stub
-        return self._stub.Query(request)
+        if not self._circuit_breaker.allow_request():
+            raise RuntimeError("CircuitBreaker is OPEN")
+            
+        try:
+            # Re-uses the channel and stub
+            response = self._stub.Query(request)
+            self._circuit_breaker.record_success()
+            return response
+        except grpc.RpcError as e:
+            self._circuit_breaker.record_failure()
+            raise e
 
+    @retry(max_retries=3, initial_delay=0.2, exceptions=(grpc.RpcError,))
     def get_chunk(self, uid: str, index: int) -> overlay_pb2.ChunkResponse:
-        chunk_request = overlay_pb2.ChunkRequest(uid=uid, chunk_index=index)
-        return self._stub.GetChunk(chunk_request)
+        if not self._circuit_breaker.allow_request():
+            raise RuntimeError("CircuitBreaker is OPEN")
+            
+        try:
+            chunk_request = overlay_pb2.ChunkRequest(uid=uid, chunk_index=index)
+            response = self._stub.GetChunk(chunk_request)
+            self._circuit_breaker.record_success()
+            return response
+        except grpc.RpcError as e:
+            self._circuit_breaker.record_failure()
+            raise e
 
 
 class NeighborRegistry:
