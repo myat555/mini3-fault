@@ -25,6 +25,11 @@
 - Events: `query_started`, `query_completed`, `state_changed`, `neighbor_failed`, `neighbor_recovered`
 - Non-blocking execution - queries don't wait for hooks
 
+### Resilience & Fault Tolerance
+- **Retry with Exponential Backoff**: Automatically retries transient network failures (up to 3 times) with jitter.
+- **Circuit Breaker**: Prevents cascading failures by "tripping" after 5 consecutive failures, failing fast for 10 seconds before attempting recovery.
+- **Unit Tests**: Verified by `test_resilience.py` covering retry logic and circuit breaker states.
+
 ## Quick Test
 
 ### Single Host
@@ -41,6 +46,11 @@ python -u node.py configs/one_host_config.json F
 # Run fault tolerance tests
 ```
 python test_fault_tolerance.py configs/one_host_config.json 127.0.0.1 60051
+```
+
+# Run resilience unit tests
+```
+python test_resilience.py
 ```
 
 ### Two Host
